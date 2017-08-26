@@ -1,5 +1,30 @@
 assignments = []
 
+rows = 'ABCDEFGHI'
+cols = '123456789'
+cols_rev = cols[::-1]
+boxes = cross(rows, cols)
+
+row_units = [cross(r, cols) for r in rows]
+column_units = [cross(rows, c) for c in cols]
+square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
+d1_units = [[rows[i]+cols[i] for i in range(len(rows))]]
+d2_units = [[rows[i]+cols_rev[i] for i in range(len(rows))]]
+
+do_diagonal = 1 # Set this flag = 0 for non-diagonal sudoku
+if do_diagonal == 1:
+    unitlist = row_units + column_units + square_units + d1_units + d2_units
+else:
+    unitlist = row_units + column_units + square_units
+
+units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
+peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
+
+def cross(A, B):
+    "Cross product of elements in A and elements in B."
+    return [s+t for s in A for t in B]
+
+
 def assign_value(values, box, value):
     """
     Please use this function to update your values dictionary!
@@ -25,11 +50,10 @@ def naked_twins(values):
     """
 
     # Find all instances of naked twins
-    # Eliminate the naked twins as possibilities for their peers
+    # Eliminate the naked twins as possibilities for their peers	
+	
+	
 
-def cross(A, B):
-    "Cross product of elements in A and elements in B."
-    pass
 
 def grid_values(grid):
     """
@@ -41,7 +65,15 @@ def grid_values(grid):
             Keys: The boxes, e.g., 'A1'
             Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
     """
-    pass
+    chars = []
+    digits = '123456789'
+    for c in grid:
+        if c in digits:
+            chars.append(c)
+        if c == '.':
+            chars.append(digits)
+    assert len(chars) == 81
+    return dict(zip(boxes, chars))
 
 def display(values):
     """
@@ -49,7 +81,14 @@ def display(values):
     Args:
         values(dict): The sudoku in dictionary form
     """
-    pass
+    width = 1+max(len(values[s]) for s in boxes)
+    line = '+'.join(['-'*(width*3)]*3)
+    for r in rows:
+        print(''.join(values[r+c].center(width)+('|' if c in '36' else '')
+                      for c in cols))
+        if r in 'CF': print(line)
+    print
+
 
 def eliminate(values):
     pass
