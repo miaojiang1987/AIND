@@ -1,5 +1,9 @@
 assignments = []
 
+def cross(A, B):
+    "Cross product of elements in A and elements in B."
+    return [s+t for s in A for t in B]
+
 rows = 'ABCDEFGHI'
 cols = '123456789'
 cols_rev = cols[::-1]
@@ -19,11 +23,6 @@ else:
 
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
-
-def cross(A, B):
-    "Cross product of elements in A and elements in B."
-    return [s+t for s in A for t in B]
-
 
 def assign_value(values, box, value):
     """
@@ -119,11 +118,16 @@ def eliminate(values):
 
 
 def only_choice(values):
+    # Write a function that will take as an input, the sudoku in dictionary form,
+    # run through all the units, applying the only choice technique,
+    # and return the resulting sudoku in dictionary form.
+
     for unit in unitlist:
-	    for digit in '123456789':
-			dplaces = [box for box in unit if digit in values[box]]
-			if len(dplaces) == 1:
-			   values = assign_value(values, dplaces[0], digit)
+        for digit in '123456789':
+            dplaces = [box for box in unit if digit in values[box]]
+            if len(dplaces) == 1:
+                #values[dplaces[0]] = digit
+                values = assign_value(values, dplaces[0], digit)
     return values
 
 def reduce_puzzle(values):
