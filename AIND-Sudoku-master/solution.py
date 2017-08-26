@@ -14,11 +14,7 @@ def cross(a, b):
     "Cross product of elements in A and elements in B."
     return [s+t for s in a for t in b]
 
-
-"""
-The Block below shows how we inititialize some values to prepare for our algirhtms.
-"""	
-
+	
 rows = 'ABCDEFGHI'
 cols = '123456789'
 
@@ -37,13 +33,13 @@ square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','45
 ## Units for Diagonal Constraints
 diagonal_units = [['A1', 'B2', 'C3', 'D4', 'E5', 'F6', 'G7', 'H8', 'I9'], ['I1', 'H2', 'G3', 'F4', 'E5', 'D6', 'C7', 'B8', 'A9']]
 
-## Dict for all the boxes and corresponding list of units
+## List of all the units
 unitlist = row_units + column_units + square_units + diagonal_units
 
-## List of all the units
+## Dict for all the boxes and corresponding list of units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 
-## Dict for all the peers for given box
+# Dict for all the peers for given box
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
 
 def find_naked_twins_in_unit(values, unit):
@@ -158,7 +154,7 @@ def reduce_puzzle(values):
     stalled = False
     while not stalled:
         solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
-		values = eliminate(values)
+        values = eliminate(values)
         values = only_choice(values)
         values = naked_twins(values)
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
