@@ -3,7 +3,8 @@ from asl_data import SinglesData
 
 
 def recognize(models: dict, test_set: SinglesData):
-""" Recognize test word sequences from word models set
+    """ Recognize test word sequences from word models set
+
    :param models: dict of trained models
        {'SOMEWORD': GaussianHMM model object, 'SOMEOTHERWORD': GaussianHMM model object, ...}
    :param test_set: SinglesData object

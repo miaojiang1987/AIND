@@ -49,10 +49,12 @@ class ModelSelector(object):
 
 class SelectorConstant(ModelSelector):
     """ select the model with value self.n_constant
+
     """
 
     def select(self):
         """ select based on n_constant value
+
         :return: GaussianHMM object
         """
         best_num_components = self.n_constant
@@ -61,6 +63,7 @@ class SelectorConstant(ModelSelector):
 
 class SelectorBIC(ModelSelector):
     """ select the model with the lowest Bayesian Information Criterion(BIC) score
+
     http://www2.imm.dtu.dk/courses/02433/doc/ch6_slides.pdf
     Bayesian information criteria: BIC = -2 * logL + p * logN
     """
@@ -68,6 +71,7 @@ class SelectorBIC(ModelSelector):
     def select(self):
         """ select the best model for self.this_word based on
         BIC score for n between self.min_n_components and self.max_n_components
+
         :return: GaussianHMM object
         """
         warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -90,6 +94,7 @@ class SelectorBIC(ModelSelector):
 
 class SelectorDIC(ModelSelector):
     ''' select best model based on Discriminative Information Criterion
+
     Biem, Alain. "A model selection criterion for classification: Application to hmm topology optimization."
     Document Analysis and Recognition, 2003. Proceedings. Seventh International Conference on. IEEE, 2003.
     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.58.6208&rep=rep1&type=pdf
@@ -119,6 +124,7 @@ class SelectorDIC(ModelSelector):
 
 class SelectorCV(ModelSelector):
     ''' select best model based on average log Likelihood of cross-validation folds
+
     '''
 
     def select(self):
