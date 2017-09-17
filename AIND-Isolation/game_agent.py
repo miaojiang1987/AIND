@@ -34,8 +34,26 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    # always score terminal states first
+    if game.is_winner(player):
+        return float('inf')
+    if game.is_loser(player):
+        return float('-inf')
+
+    player_moves = len(game.get_legal_moves(player))
+    opponent_moves = len(game.get_legal_moves(game.get_opponent(player)))
+
+    # increase aggression towards end game
+    aggression = 1.
+    percent_over = float(len(game.get_blank_spaces())) / (game.width * game.height)
+    if percent_over <= .5:
+        aggression = 1.15
+    elif percent_over <= .25:
+        aggression = 1.25
+    elif percent_over <= .10:
+        aggression = 1.5
+
+    return player_moves - (aggression * opponent_moves)
 
 
 def custom_score_2(game, player):
@@ -60,8 +78,25 @@ def custom_score_2(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    # always score terminal states first
+    if game.is_winner(player):
+        return float('inf')
+    if game.is_loser(player):
+        return float('-inf')
+
+    # get legal moves for both players
+    player_moves = game.get_legal_moves(player)
+    opp_moves = game.get_legal_moves(game.get_opponent(player))
+
+    # check if there is one stealable move
+    cutthroat_bonus = 0.
+    if len(set(player_moves).intersection(opp_moves)) == 1:
+      if game.active_player == player:
+          cutthroat_bonus += 1.
+      else:
+          cutthroat_bonus -= 1.
+
+    return len(player_moves) - len(opp_moves) + cutthroat_bonus
 
 
 def custom_score_3(game, player):
@@ -86,8 +121,34 @@ def custom_score_3(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_winner(player):
+        return float('inf')
+    if game.is_loser(player):
+        return float('-inf')
+
+    player_moves = len(game.get_legal_moves(player))
+    opponent_moves = len(game.get_legal_moves(game.get_opponent(player)))
+
+    # add reward for central board positions
+    position_bonus = 0
+    x, y = game.get_player_location(player)
+    x_centralness = float(x) / game.width
+    y_centralness = float(y) / game.height
+    if .333 <= x_centralness or x_centralness <= .667:
+      position_bonus += .5
+    if .333 <= y_centralness or y_centralness <= .667:
+      position_bonus += .5
+
+    # also reward when opponent is non-central
+    opp_x, opp_y = game.get_player_location(game.get_opponent(player))
+    x_opp_centralness = float(opp_x) / game.width
+    y_opp_centralness = float(opp_y) / game.height
+    if .333 > x_opp_centralness or x_opp_centralness > .667:
+      position_bonus += .5
+    if .333 > y_opp_centralness or y_opp_centralness > .667:
+      position_bonus += .5
+
+    return player_moves - opponent_moves + position_bonus
 
 
 class IsolationPlayer:
@@ -212,8 +273,60 @@ class MinimaxPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        return self._minimax(game, depth)[0]
+
+    def _minimax(self, game, depth):
+        """Actual implementation of minimax with more convenient return type.
+
+        Parameters
+        ----------
+        game : isolation.Board
+            An instance of the Isolation game `Board` class representing the
+            current game state
+
+        depth : int
+            Depth is an integer representing the maximum number of plies to
+            search in the game tree before aborting
+
+        Returns
+        -------
+        ((int, int), int)
+            Tuple of best move found and its score, although best move found
+            will be None for leaf nodes of search and (-1, -1) for nodes where
+            no moves are possible (since the game is over)
+        """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        # base case- if reaching max depth, return score for game state
+        if depth == 0:
+            return (None, self.score(game, self))
+
+        # keep track of best move found, if no legal moves will be (-1, -1)
+        best_move_found = (-1, -1)
+
+        # detect which player is active to determine if at min or max node
+        # f is evaluation function for comparing moves (either min or max)
+        # v is value of best move found so far
+        if game.active_player == self:
+            v = float('-inf')
+            f = max
+        else:
+            v = float('inf')
+            f = min
+
+        # loop over all legal moves for current player
+        for move in game.get_legal_moves():
+            # generate new game with that move applied
+            forecast = game.forecast_move(move)
+            # recursively call minimax at lower depth for forecasted game
+            forecast_v = self._minimax(forecast, depth - 1)[1]
+            # if forecasted game satisfies evaluation function, record it
+            if f(v, forecast_v) == forecast_v:
+                best_move_found = move
+                v = f(v, forecast_v)
+
+        return (best_move_found, v)
 
 
 class AlphaBetaPlayer(IsolationPlayer):
@@ -254,8 +367,25 @@ class AlphaBetaPlayer(IsolationPlayer):
         """
         self.time_left = time_left
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        # Initialize the best move so that this function returns something
+        # in case the search fails due to timeout
+        best_move = (-1, -1)
+
+        # Keep looking deeper until out of time
+        depth = 1
+        while True:
+            try:
+                # The try/except block will automatically catch the exception
+                # raised when the timer is about to expire.
+                best_move = self.alphabeta(game, depth)
+                depth += 1
+
+            # Break out if running out of time to return best move found so far
+            except SearchTimeout:
+                break
+
+        # Return the best move from the last completed search iteration
+        return best_move
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
         """Implement depth-limited minimax search with alpha-beta pruning as
@@ -305,5 +435,76 @@ class AlphaBetaPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        return self._alphabeta(game, depth)[0]
+
+    def _alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
+        """Actual implementation of alphabeta with more convenient return type.
+
+        Parameters
+        ----------
+        game : isolation.Board
+            An instance of the Isolation game `Board` class representing the
+            current game state
+
+        depth : int
+            Depth is an integer representing the maximum number of plies to
+            search in the game tree before aborting
+
+        alpha : float
+            Alpha limits the lower bound of search on minimizing layers
+
+        beta : float
+            Beta limits the upper bound of search on maximizing layers
+
+        Returns
+        -------
+        ((int, int), int)
+            Tuple of best move found and its score, although best move found
+            will be None for leaf nodes of search and (-1, -1) for nodes where
+            no moves are possible (since the game is over)
+        """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        # base case- if reaching max depth, return score for game state
+        if depth == 0:
+            return (None, self.score(game, self))
+
+        # keep track of best move found, if no legal moves will be (-1, -1)
+        best_move_found = (-1, -1)
+
+        # detect which player is active to determine if at min or max node
+        # f is evaluation function for comparing moves (either min or max)
+        # v is value of best move found so far
+        # is_alpha determines whether should check alpha or beta
+        if game.active_player == self:
+            v = float('-inf')
+            f = max
+            is_alpha = True
+        else:
+            v = float('inf')
+            f = min
+            is_alpha = False
+
+        # loop over all legal moves for current player
+        for move in game.get_legal_moves():
+            # generate new game with that move applied
+            forecast = game.forecast_move(move)
+            # recursively call alphabeta at lower depth for forecasted game
+            forecast_v = self._alphabeta(forecast, depth - 1, alpha, beta)[1]
+            # if forecasted game satisfies evaluation function, record it
+            if f(v, forecast_v) == forecast_v:
+                best_move_found = move
+                v = f(v, forecast_v)
+
+            # prune if we can
+            if ((is_alpha and v >= beta) or (not is_alpha and v <= alpha)):
+                return (best_move_found, v)
+
+            # update alpha or beta
+            if is_alpha:
+                alpha = max(alpha, v)
+            else:
+                beta = min(beta, v)
+
+        return (best_move_found, v)
